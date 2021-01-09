@@ -1,0 +1,12 @@
+pandas
+numpy
+scipy
+matplotlib
+ipympl
+mplcursors
+ipympl
+jupyter
+notebook
+qgrid
+nmrglue
+voila
