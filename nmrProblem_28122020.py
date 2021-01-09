@@ -22,9 +22,9 @@ import mplcursors
 
 from ipywidgets import widgets
 
-import guidata
-import guidata.dataset.datatypes as dt
-import guidata.dataset.dataitems as di
+# import guidata
+# import guidata.dataset.datatypes as dt
+# import guidata.dataset.dataitems as di
 
 
 
@@ -33,17 +33,17 @@ import guidata.dataset.dataitems as di
 #     """Molecule Formula"""
 #     molecule_formula = di.StringItem("Enter Atoms and number present in molecule")
 
-class moleculeText(dt.DataSet):
-    """Molecule Formula"""
-    reset_problem = di.BoolItem("Reset NMR problem", default=False)
-    molecule_formula = di.StringItem("Enter Atoms and number present in molecule")
-    protonGroupsInSpectrum = di.IntItem("Number of Proton Groups in Spectrum")
-    carbonGroupsInSpectrum = di.IntItem("Number of Carbon Groups in Spectrum")
+# class moleculeText(dt.DataSet):
+#     """Molecule Formula"""
+#     reset_problem = di.BoolItem("Reset NMR problem", default=False)
+#     molecule_formula = di.StringItem("Enter Atoms and number present in molecule")
+#     protonGroupsInSpectrum = di.IntItem("Number of Proton Groups in Spectrum")
+#     carbonGroupsInSpectrum = di.IntItem("Number of Carbon Groups in Spectrum")
     
     
-class problemDirectory(dt.DataSet):
-    """NMR Directory"""
-    probNameDir = di.DirectoryItem("NMR problem")
+# class problemDirectory(dt.DataSet):
+#     """NMR Directory"""
+#     probNameDir = di.DirectoryItem("NMR problem")
 
 
 class NMRproblem:
@@ -122,7 +122,7 @@ class NMRproblem:
                                                               self.udic[1]['obs'], 
                                                               self.udic[1]['car'])
         
-        self.molecule_gui = moleculeText()
+        # self.molecule_gui = moleculeText()
 
         if not self.init_class_from_yml(problemDirectory):
             
@@ -227,53 +227,53 @@ class NMRproblem:
         
         self.iprobs = info.get('iprobs', {})
 
-    @classmethod
-    def from_guidata(cls):
+#     @classmethod
+#     def from_guidata(cls):
 
-        probDir = problemDirectory()
-        ok = probDir.edit()
+#         probDir = problemDirectory()
+#         ok = probDir.edit()
 
-        if ok:
-            co = cls(probDir.probNameDir)
-        else:
-            co = None # cls(os.getcwd())
+#         if ok:
+#             co = cls(probDir.probNameDir)
+#         else:
+#             co = None # cls(os.getcwd())
 
-        return co
+#         return co
 
-    def update_molecule_gui(self):
-        self.molecule_gui = moleculeText()
-        if  self.moleculeAtomsStr == "":
-            self.molecule_gui.molecule_formula = ""
-            self.molecule_gui.protonGroupsInSpectrum = 0
-            self.molecule_gui.carbonGroupsInSpectrum = 0
-        else:
-            self.molecule_gui.molecule_formula = self.moleculeAtomsStr
-            self.molecule_gui.protonGroupsInSpectrum = self.numProtonGroups
-            self.molecule_gui.carbonGroupsInSpectrum = self.numCarbonGroups
+    # def update_molecule_gui(self):
+    #     self.molecule_gui = moleculeText()
+    #     if  self.moleculeAtomsStr == "":
+    #         self.molecule_gui.molecule_formula = ""
+    #         self.molecule_gui.protonGroupsInSpectrum = 0
+    #         self.molecule_gui.carbonGroupsInSpectrum = 0
+    #     else:
+    #         self.molecule_gui.molecule_formula = self.moleculeAtomsStr
+    #         self.molecule_gui.protonGroupsInSpectrum = self.numProtonGroups
+    #         self.molecule_gui.carbonGroupsInSpectrum = self.numCarbonGroups
     
-        ok = self.molecule_gui.edit()
+    #     ok = self.molecule_gui.edit()
 
-        if ok:
-            changed = False
-            if self.molecule_gui.reset_problem:
-                changed = True
-            if self.moleculeAtomsStr != self.molecule_gui.molecule_formula:
-                changed = True
-            if self.numProtonGroups != self.molecule_gui.protonGroupsInSpectrum:
-                changed = True
-            if self.numCarbonGroups != self.molecule_gui.carbonGroupsInSpectrum:
-                changed = True
-            self.moleculeAtomsStr = self.molecule_gui.molecule_formula
-            self.numProtonGroups = self.molecule_gui.protonGroupsInSpectrum
-            self.numCarbonGroups = self.molecule_gui.carbonGroupsInSpectrum
+    #     if ok:
+    #         changed = False
+    #         if self.molecule_gui.reset_problem:
+    #             changed = True
+    #         if self.moleculeAtomsStr != self.molecule_gui.molecule_formula:
+    #             changed = True
+    #         if self.numProtonGroups != self.molecule_gui.protonGroupsInSpectrum:
+    #             changed = True
+    #         if self.numCarbonGroups != self.molecule_gui.carbonGroupsInSpectrum:
+    #             changed = True
+    #         self.moleculeAtomsStr = self.molecule_gui.molecule_formula
+    #         self.numProtonGroups = self.molecule_gui.protonGroupsInSpectrum
+    #         self.numCarbonGroups = self.molecule_gui.carbonGroupsInSpectrum
 
-            self.calculate_dbe()
+    #         self.calculate_dbe()
             
-            # print(self.elements)
+    #         # print(self.elements)
 
-            if changed:
-                # delete old dataframe and then recreate it with new params
-                self.create_new_nmrproblem_df()
+    #         if changed:
+    #             # delete old dataframe and then recreate it with new params
+    #             self.create_new_nmrproblem_df()
 
 
     def update_molecule_ipywidgets(self, molecule_str,pGrps,cGrps):
@@ -1083,36 +1083,36 @@ def save1DspecInfotoUdic(nmrproblem):
             udic[i]['info'].loc[j,'pk_left'] = p[0]-udic[i]['size']
             udic[i]['info'].loc[j,'pk_right'] = p[1]-udic[i]['size']    
     
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    _app = guidata.qapplication()  # not required if a QApplication has already been created
+#     _app = guidata.qapplication()  # not required if a QApplication has already been created
 
-    nmrproblem = NMRproblem.from_guidata()
+#     nmrproblem = NMRproblem.from_guidata()
     
-    # print(type(nmrproblem))
+#     # print(type(nmrproblem))
     
-    if isinstance(nmrproblem, NMRproblem):
+#     if isinstance(nmrproblem, NMRproblem):
     
-        nmrproblem.update_molecule_gui()
+#         nmrproblem.update_molecule_gui()
         
-        nmrproblem.save_as_yml()
+#         nmrproblem.save_as_yml()
         
-        print(nmrproblem.df)
+#         print(nmrproblem.df)
         
-        H1df_orig, C13df_orig = readinChemShiftTables()
+#         H1df_orig, C13df_orig = readinChemShiftTables()
         
-        H1df, C13df, probDistFunctions = calcProbDistFunctions(nmrproblem, H1df_orig, C13df_orig)
+#         H1df, C13df, probDistFunctions = calcProbDistFunctions(nmrproblem, H1df_orig, C13df_orig)
         
-        iprobs = identify1HC13peaks(nmrproblem, H1df, C13df)
+#         iprobs = identify1HC13peaks(nmrproblem, H1df, C13df)
         
-        nmrproblem.udic[0]['df'] = H1df
-        nmrproblem.udic[1]['df'] = C13df
+#         nmrproblem.udic[0]['df'] = H1df
+#         nmrproblem.udic[1]['df'] = C13df
         
-        create1H13Clabels(nmrproblem, iprobs, num_poss=3)
+#         create1H13Clabels(nmrproblem, iprobs, num_poss=3)
         
-        plotC13Distributions(nmrproblem)
-        plotH1Distributions(nmrproblem, numCandidates=5)
+#         plotC13Distributions(nmrproblem)
+#         plotH1Distributions(nmrproblem, numCandidates=5)
         
-        www = create1D_H1C13plot(nmrproblem)
+#         www = create1D_H1C13plot(nmrproblem)
 
 
