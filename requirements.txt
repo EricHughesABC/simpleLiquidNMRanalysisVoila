@@ -10,3 +10,4 @@ notebook
 qgrid
 nmrglue
 voila
+pyyaml
