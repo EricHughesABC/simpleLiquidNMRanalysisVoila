@@ -10,4 +10,4 @@ notebook
 nmrglue
 voila
 pyyaml
-pysheet
+ipysheet
