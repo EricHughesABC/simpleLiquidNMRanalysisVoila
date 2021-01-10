@@ -7,7 +7,7 @@ mplcursors
 ipympl
 jupyter
 notebook
-qgrid
 nmrglue
 voila
 pyyaml
+pysheet
