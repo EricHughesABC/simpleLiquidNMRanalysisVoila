@@ -38,3 +38,31 @@ ipysheet: 0.4.4
 nmrglue: 0.8
 ```
 
+#### Running the main notebook  simpleNMR_001.ipynb
+
+The main notebook, simpleNMR_001.ipynb can be run in jupyter, all other notebooks are test notebooks that are not guaranteed to run completely.  The notebook can be run with voila from jupyter if it is installed or from the command line by typing
+
+```voila simpleNMR_001.ipynb```
+
+The notebook can be run from Heroku, this requires an account.
+
+```
+$ heroku create uniqename
+$ git push heroku main
+$ heroku ps:scale web=1
+$ heroku open
+```
+
+Once the notebook is up and running an example can be found in the *exampleProblems/ch9_025* directory. 
+
+Click on the Problem Directory to load the example file by clicking on the Oepn Existing Problem button and navigating to the example directory and clicking on the problem yaml file
+
+![problemDirectory](images/problemDirectory.png)
+
+Then click on the Dataset to see the details of the loaded problem. Click on the update and run button to create the plots and likely assignments for the different peaks.
+
+![dataSet](images/dataSet.png)
+
+The plots can be seen in the Problem Plots tab.
+
+![problemPlots](images/problemPlots.png)
