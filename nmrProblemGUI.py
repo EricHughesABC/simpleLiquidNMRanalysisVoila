@@ -37,8 +37,8 @@ import nmrglue as ng
 # dfLayout = widgets.VBox([dfWarningTextW])  # start with an empty widget
 # dfLayout
 
-h1 = r"C:\Users\ERIC\Documents\projects\programming\2021\python\heroku\voila\ChemicalShiftTables\RandazzoBook\h1_chemical_shift_table_18012021.jsn"
-c13 = r"C:\Users\ERIC\Documents\projects\programming\2021\python\heroku\voila\ChemicalShiftTables\RandazzoBook\c13_chemical_shift_table_18012021.jsn"
+h1 = r"csTables\h1_chemical_shift_table.jsn"
+c13 = r"csTables\c13_chemical_shift_table.jsn"
 
 H1df_orig, C13df_orig = nmrProblem.read_in_cs_tables(h1,c13)
 
