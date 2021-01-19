@@ -1081,7 +1081,361 @@ def save1DspecInfotoUdic(nmrproblem):
         for j in udic[i]['atoms']:
             p = udic[i]['info'].loc[j, 'peak_ranges_pts']
             udic[i]['info'].loc[j,'pk_left'] = p[0]-udic[i]['size']
-            udic[i]['info'].loc[j,'pk_right'] = p[1]-udic[i]['size']    
+            udic[i]['info'].loc[j,'pk_right'] = p[1]-udic[i]['size']   
+            
+            
+            
+class NMRproblem2:
+    
+    def __init__(self, problemDirectory):
+
+        # self.problemDirectoryPath = None
+        # self.rootDirectory = None
+        # self.problemDirectory = None
+        self.problemDirectoryPath = problemDirectory
+        self.rootDirectory, self.problemDirectory = os.path.split(problemDirectory)
+        
+        self.pngFiles = []
+        self.jupyterFiles = []
+        self.fidFilesDirectories = []
+        self.yamlFiles = []
+        self.excelFiles = []
+        self.csvFiles = []
+        self.pklFiles = []
+
+        self.df = pd.DataFrame()
+        self.dfBackup = pd.DataFrame()
+        self.dfColumns = None
+        self.dfIndex = None
+
+        self.moleculePNGpanel = None
+        self.moleculeAtomsStr = ""
+        
+        self.protonAtoms = []
+        self.carbonAtoms = []
+        self.elements = {}
+        self.iprobs = {}
+        
+
+        self.numProtonGroups = 0
+        self.numCarbonGroups = 0
+
+        self.udic = {'ndim': 2,
+                    0: { 'obs': 400.0,              
+                        'sw': 12 * 400.0,
+                        'dw': 1.0/(12 * 400.0),              
+                        'car': 12 * 400.0 / 2.0,
+                        'size': int(32*1024),
+                        'label': '1H',
+                        'complex': True,
+                        'encoding': 'direct',
+                        'time': False,
+                        'freq': True,
+                        'lb': 0.5
+                        },
+                    
+                    1: { 'obs': 100.0,              
+                        'sw': 210 * 100.0,
+                        'dw': 1.0/(210 * 100.0),              
+                        'car': 210 * 100.0 / 2.0,
+                        'size': int(1024*32),
+                        'label': '13C',
+                        'complex': True,
+                        'encoding': 'direct',
+                        'time': False,
+                        'freq': True,
+                        'lb': 0.5
+                        }
+                    }
+
+        self.udic[0]['axis'] = ng.fileiobase.unit_conversion( self.udic[0]['size'],
+                                                              self.udic[0]['complex'], 
+                                                              self.udic[0]['sw'], 
+                                                              self.udic[0]['obs'], 
+                                                              self.udic[0]['car'])
+
+        self.udic[1]['axis'] = ng.fileiobase.unit_conversion( self.udic[1]['size'],
+                                                              self.udic[1]['complex'], 
+                                                              self.udic[1]['sw'], 
+                                                              self.udic[1]['obs'], 
+                                                              self.udic[1]['car'])
+        
+
+        self.init_class_from_yml(problemDirectory)
+            
+            
+
+    
+    def init_class_from_yml(self, ymlFileNameDirName):
+        
+        # print("Enter init_class_from_yml")
+        
+        if os.path.isdir(ymlFileNameDirName):
+            self.yamlFiles = [os.path.join(ymlFileNameDirName,f) for f in os.listdir( ymlFileNameDirName) if f.endswith('yml')]
+            if len(self.yamlFiles) == 0:
+                 return False
+        elif ymlFileNameDirName.endswith('yml') and os.path.exists(ymlFileNameDirName):
+            self.yamlFiles = [ymlFileNameDirName]
+        else:
+            return False
+        
+        if not os.path.exists(self.yamlFiles[0]):
+            return False
+        
+        with open(self.yamlFiles[0], 'r') as fp:
+            info = yaml.safe_load(fp)
+            self.init_variables_from_dict(info)
+            
+        return(True)
+    
+    
+    
+    def init_variables_from_dict(self, info):
+               
+#         self.pngFiles = info.get('pngFiles',self.pngFiles)
+#         self.jupyterFiles = info.get('jupyterFiles', self.jupyterFiles )
+#         self.fidFilesDirectories = info.get('fidFilesDirectories', self.fidFilesDirectories )
+#         self.yamlFiles = info.get('yamlFiles', self.yamlFiles )
+#         self.excelFiles = info.get('excelFiles', self.excelFiles)
+#         self.csvFiles = info.get('csvFiles', self.csvFiles )
+#         self.pklFiles = info.get('pklFiles', self.pklFiles )
+        
+        self.dfColumns = info['dfColumns']
+        self.dfIndex = info['dfIndex']
+
+        self.df = pd.DataFrame.from_dict(info['df'])
+        if (len(self.dfColumns) > 0) and (len(self.dfIndex) > 0):
+            self.df = self.df.loc[self.dfIndex, self.dfColumns]
+        self.df_backup = self.df.copy()
+
+        self.moleculeAtomsStr = info.get('moleculeAtomsStr', self.moleculeAtomsStr )
+        self.numProtonGroups = info.get('numProtonGroups', self.numProtonGroups)
+        self.numCarbonGroups = info.get('numCarbonGroups', self.numCarbonGroups)
+        
+        self.udic = info.get('udic', self.udic)
+        
+        for i in range(self.udic['ndim']):        
+            self.udic[i]['axis'] = ng.fileiobase.unit_conversion( self.udic[i]['size'],
+                                                                  self.udic[i]['complex'], 
+                                                                  self.udic[i]['sw'], 
+                                                                  self.udic[i]['obs'], 
+                                                                  self.udic[i]['car'])
+            
+        # create dbe and elements from moleculeAtomsStr        
+        self.calculate_dbe()
+        
+        # fill in protonAtoms and carbonAtoms list
+        
+        self.protonAtoms = [ 'H'+str(i+1) for i in range(self.numProtonGroups)]
+        self.carbonAtoms = [ 'C'+str(i+1) for i in range(self.numCarbonGroups)]
+        
+        self.udic[0]['atoms'] = self.protonAtoms
+        self.udic[1]['atoms'] = self.carbonAtoms
+
+
+
+
+
+
+    def calculate_dbe(self):
+        # dbe_elements = ('C','H','N','F','Cl','Br')
+        # match Element and number Cl, C3, O6, H
+        aaa =re.findall(r'[A-Z][a-z]?\d?\d?\d?',
+                         self.moleculeAtomsStr)
+        # match Element Cl, C, H, N
+        eee = re.findall(r'[A-Z][a-z]?',
+                           self.moleculeAtomsStr)
+
+        # print("aaa", aaa)
+        # print("eee", eee)
+
+        # create dictionary  of elements and number of elements
+    
+        self.elements = {}
+        dbe_value = 0
+        
+        for e, a in zip(eee, aaa):
+            if len(a) > len(e):
+                num = a[len(e):]
+            else:
+                num = '1'
+
+            self.elements[e] = int(num)
+
+        if 'C' in self.elements:
+            dbe_value = self.elements['C']
+        if 'N' in self.elements:
+            dbe_value += self.elements['N']/2
+        for e in ['H', 'F', 'Cl', 'Br']:
+            if e in self.elements:
+                dbe_value -= self.elements[e]/2
+
+        self.dbe = dbe_value + 1
+
+        
+    def dfToNumbers(self):
+        """converts table contents from strings to floats and integers where appropriate"""
+        self.df.loc['integral', self.protonAtoms + self.carbonAtoms] = self.df.loc['integral', self.protonAtoms + self.carbonAtoms].astype(int)
+        self.df.loc['C13 hyb', self.protonAtoms + self.carbonAtoms] = self.df.loc['C13 hyb', self.protonAtoms + self.carbonAtoms].astype(int)
+        self.df.loc['attached protons', self.carbonAtoms] = self.df.loc['attached protons', self.carbonAtoms].astype(int)
+        self.df.loc['ppm', self.protonAtoms + self.carbonAtoms] = self.df.loc['ppm', self.protonAtoms + self.carbonAtoms].astype(float)
+        self.df.loc[self.protonAtoms + self.carbonAtoms, 'ppm'] = self.df.loc[ self.protonAtoms + self.carbonAtoms, 'ppm'].astype(float)
+
+        
+    def updateDFtable(self, qdf):
+
+        # global nmrproblem
+        
+        # print("updateDFtable(nmrproblem, qdf)")
+        
+        self.df_backup = self.df.copy()
+        self.df = qdf.copy()
+        
+        df = self.df
+        
+        # copy ppm values in row to columns
+        
+        atoms = self.protonAtoms + self.carbonAtoms
+        proton_atoms = self.protonAtoms
+        carbon_atoms = self.carbonAtoms    
+        df.loc[atoms, 'ppm'] = df.loc['ppm', atoms]
+        
+        # copy hmb and hsqc information over to carbon columns and proton rows
+        for hi in proton_atoms:
+            df.loc[hi, carbon_atoms] =  df.loc[carbon_atoms, hi]
+            
+        hsqc = df.loc[proton_atoms,carbon_atoms]
+        for hi in carbon_atoms:
+            df.loc['hsqc',hi] = list(hsqc[hsqc[hi]=='o'].index)
+            df.loc['hmbc',hi] = list(hsqc[hsqc[hi]=='x'].index)
+        
+        hsqc = df.loc[carbon_atoms,proton_atoms]
+        for hi in proton_atoms:
+            df.loc['hsqc',hi] = list(hsqc[hsqc[hi]=='o'].index)
+            df.loc['hmbc',hi] = list(hsqc[hsqc[hi]=='x'].index)
+        
+        cosy = df.loc[proton_atoms]
+        for hi in proton_atoms:
+            df.loc['cosy',hi] = list(cosy[cosy[hi]=='o'].index)
+        
+        # turn string values to ints, floats and lists
+        try:
+            #self.dfToNumbers()
+           # convertHSQCHMBCCOSYtoLists(self)
+           # convertJHzToLists(self)
+            
+            # qdf = df
+            
+            
+            return True
+        except:
+            df = self.df_backup.copy()
+            return False
+        
+        
+    def createInfoDataframes(self):
+    #     global nmrproblem
+        
+        self.udic[0]['info'] = self.df.loc[['integral',
+                                                        'J type',
+                                                        'J Hz', 
+                                                        'ppm', 
+                                                        'cosy', 
+                                                        'hsqc', 
+                                                        'hmbc'], 
+                                                        self.protonAtoms ].T
+
+        self.udic[0]['info']['labels'] = self.udic[0]['info'].index
+        
+        self.udic[1]['info'] = self.df.loc[['integral',
+                                                        'J type',
+                                                        'J Hz', 
+                                                        'ppm', 
+                                                        'cosy', 
+                                                        'hsqc', 
+                                                        'hmbc'], 
+                                                        self.carbonAtoms ].T
+
+        self.udic[1]['info']['labels'] = self.udic[1]['info'].index            
+    
+
+    def update_molecule_ipywidgets(self, molecule_str,pGrps,cGrps):
+
+
+
+        changed = False
+        if self.moleculeAtomsStr != molecule_str:
+            changed = True
+        if self.numProtonGroups != pGrps:
+            changed = True
+        if self.numCarbonGroups != cGrps:
+            changed = True
+        self.moleculeAtomsStr = molecule_str
+        self.numProtonGroups = pGrps
+        self.numCarbonGroups = cGrps
+
+        self.calculate_dbe()
+        
+        # print(self.elements)
+
+        if changed:
+            # delete old dataframe and then recreate it with new params
+            self.create_new_nmrproblem_df()
+            
+            
+    def create_new_nmrproblem_df(self):
+        
+        # nmrProblem.info['molecular_formula'] = basics.molecule_formula
+        # DBE, elements = calculate_dbe(nmrProblem.info['molecular_formula'])
+        # print("DBE =", int(DBE))
+        # print(elements)
+        # nmrProblem.info['DBE']=DBE
+        # nmrProblem.info['elements']=elements 
+        
+        # nmrProblem.info['numNMRobservedProtons'] = basics.numNMRobservedProtons
+        # nmrProblem.info['numNMRobservedCarbons'] = basics.numNMRobservedCarbons
+        
+        self.numProtonsInMolecule = self.elements['H']
+        self.numCarbonsInMolecule = self.elements['C']
+        
+        # print("self.numProtonGroups", self.numProtonGroups, type(self.numProtonGroups))
+        # print("self.numCarbonGroups", self.numCarbonGroups, type(self.numCarbonGroups))
+
+        self.protonAtoms = ['H'+str(i+1) for i in range(self.numProtonGroups)]
+        self.carbonAtoms = ['C'+str(i+1) for i in range(self.numCarbonGroups)]
+
+        self.dfIndex = ['integral',
+                          'symmetry',
+                          'symmetry factor',
+                          'J type',
+                          'J Hz',
+                          'C13 hyb',
+                          'attached protons',
+                          'ppm'] \
+                          + self.protonAtoms[::-1] \
+                          + self.carbonAtoms[::-1] \
+                          + ['hsqc',
+                          'hmbc',
+                          'cosy']
+                        
+        self.dfColumns = ['ppm'] + self.protonAtoms + self.carbonAtoms
+
+        self.df = pd.DataFrame(index=self.dfIndex,
+                                      columns=self.dfColumns)
+
+        self.df = self.df.fillna('')
+        
+        # update df with default values
+        self.df.loc['integral', self.protonAtoms + self.carbonAtoms] = [1,] *len(self.protonAtoms + self.carbonAtoms)
+        self.df.loc['J type', self.protonAtoms + self.carbonAtoms] = ['s',] *len(self.protonAtoms + self.carbonAtoms)
+        self.df.loc['J Hz', self.protonAtoms + self.carbonAtoms] = ["[0]",] *len(self.protonAtoms + self.carbonAtoms)
+        self.df.loc['hsqc', self.protonAtoms + self.carbonAtoms] = ["[]",] *len(self.protonAtoms + self.carbonAtoms)
+        self.df.loc['hmbc', self.protonAtoms + self.carbonAtoms] = ["[]",] *len(self.protonAtoms + self.carbonAtoms)
+        self.df.loc['cosy', self.protonAtoms ] = ["[]",] *len(self.protonAtoms)
+
+        self.udic[0]['atoms'] = self.protonAtoms
+        self.udic[1]['atoms'] = self.carbonAtoms
+
     
 # if __name__ == "__main__":
 
