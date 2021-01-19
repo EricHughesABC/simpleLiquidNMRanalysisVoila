@@ -13,7 +13,7 @@ The figure below illustrates the idea.
 
 
 
-![ScreenshotProblemPlots](ScreenshotProblemPlots.png)
+![ScreenshotProblemPlots](images/ScreenshotProblemPlots.png)
 
 
 
